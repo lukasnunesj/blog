@@ -2,7 +2,7 @@ import { ConflictException, InternalServerErrorException } from "@nestjs/common"
 import { Test } from "@nestjs/testing";
 import { User } from "./user.entity";
 import { UserRepository } from "./user.repository";
-import * as bcrypt from "bcrypt";
+import * as argon2 from "argon2";
 
 const mockCredentialsDTO = {
     username: "TestUsername",
@@ -34,14 +34,14 @@ describe('UserRepository', () => {
             expect(userRepository.signUp(mockCredentialsDTO)).resolves.not.toThrow();
         });
 
-        it('throws a conflict exception when user already exists', () => {
+        it('throws a conflict exception when user already exists', async () => {
             save.mockRejectedValue({code:'23505'});
-            expect(userRepository.signUp(mockCredentialsDTO)).rejects.toThrow(ConflictException);
+            await expect(userRepository.signUp(mockCredentialsDTO)).rejects.toThrow(ConflictException);
         });
 
-        it('throws exception when got any other error', () => {
+        it('throws exception when got any other error', async () => {
             save.mockRejectedValue({code:'12345'});
-            expect(userRepository.signUp(mockCredentialsDTO)).rejects.toThrow(InternalServerErrorException);
+            await expect(userRepository.signUp(mockCredentialsDTO)).rejects.toThrow(InternalServerErrorException);
         });
     })
 
@@ -85,10 +85,10 @@ describe('UserRepository', () => {
     
     describe('hashPassword', () => {
         it('should call bycript to generate a hash of the password', async () => {
-            const spyHash = jest.spyOn(bcrypt, 'hash').mockResolvedValue('testHash');
+            const spyHash = jest.spyOn(argon2, 'hash').mockResolvedValue('testHash');
             expect(spyHash).not.toHaveBeenCalled();
-            const result = await userRepository.hashPassword('TestPassword', 'testSalt');
-            expect(spyHash).toHaveBeenCalledWith('TestPassword', 'testSalt');
+            const result = await userRepository.hashPassword('TestPassword');
+            expect(spyHash).toHaveBeenCalledWith('TestPassword');
             expect(result).toEqual('testHash');
         });
     });
