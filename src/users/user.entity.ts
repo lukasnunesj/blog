@@ -1,5 +1,5 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
-import * as bcrypt from "bcrypt";
+import * as argon2 from "argon2";
 @Entity()
 @Unique(['username'])
 export class User extends BaseEntity {
@@ -16,7 +16,7 @@ export class User extends BaseEntity {
     salt: string
 
     async validatePassword(password: string ): Promise<boolean> {
-        const hash = await bcrypt.hash(password,this.salt);
-        return hash == this.password;
+        const is_valid = await argon2.verify(this.password, password);
+        return is_valid;
     }
 }
