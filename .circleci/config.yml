@@ -11,6 +11,11 @@ jobs:
           pkg-manager: yarn
       - run:
           command: yarn test
+      - run:
+          name: "Run Jest and Collect Coverage Reports"
+          command: jest --collectCoverage=true
+      - store_artifacts:
+          path: coverage
 workflows:
   build-and-test:
     jobs:
