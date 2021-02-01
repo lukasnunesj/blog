@@ -10,7 +10,8 @@ jobs:
       - node/install-packages:
           pkg-manager: yarn
       - run:
-          command: yarn test
+          name: Install JUnit coverage reporter
+          command: yarn add --dev jest-junit
       - run:
           name: Setup Code Climate test-reporter
           command: |
@@ -25,8 +26,18 @@ jobs:
             ./cc-test-reporter before-build
             yarn jest --collectCoverage=true
             ./cc-test-reporter after-build --exit-code $?
+      - run:
+          name: Run tests with JUnit as reporter
+          command: yarn jest --ci --runInBand --reporters=default --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./coverage/reports/junit/
+      - store_test_results:
+          path: ./coverage/reports/junit/
       - store_artifacts: # upload test coverage as artifact
           path: ./coverage/lcov.info
+          prefix: tests
+      - store_artifacts: # upload test coverage as artifact
+          path: ./coverage/reports/junit/
           prefix: tests
 workflows:
   build-and-test:
