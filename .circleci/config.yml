@@ -1,0 +1,45 @@
+version: 2.1
+orbs:
+  node: circleci/node@3.0.0
+jobs:
+  build-and-test:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: Install JUnit coverage reporter
+          command: yarn add --dev jest-junit
+      - run:
+          name: Setup Code Climate test-reporter
+          command: |
+              # download test reporter as a static binary
+              curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+              chmod +x ./cc-test-reporter
+              ./cc-test-reporter before-build
+          when: always
+      - run:
+          name: "Run Jest and Collect Coverage Reports"
+          command: |
+            ./cc-test-reporter before-build
+            yarn jest --collectCoverage=true
+            ./cc-test-reporter after-build --exit-code $?
+      - run:
+          name: Run tests with JUnit as reporter
+          command: yarn jest --ci --runInBand --reporters=default --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./coverage/reports/junit/
+      - store_test_results:
+          path: ./coverage/reports/junit/
+      - store_artifacts: # upload test coverage as artifact
+          path: ./coverage/lcov.info
+          prefix: tests
+      - store_artifacts: # upload test coverage as artifact
+          path: ./coverage/reports/junit/
+          prefix: tests
+workflows:
+  build-and-test:
+    jobs:
+      - build-and-test
