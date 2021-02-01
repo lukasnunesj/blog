@@ -12,10 +12,26 @@ jobs:
       - run:
           command: yarn test
       - run:
+          name: Setup Code Climate test-reporter
+          command: |
+              # download test reporter as a static binary
+              curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+              chmod +x ./cc-test-reporter
+              ./cc-test-reporter before-build
+          when: always
+      - run:
           name: "Run Jest and Collect Coverage Reports"
           command: yarn jest --collectCoverage=true
-      - store_artifacts:
-          path: coverage
+      - run:
+          name: Send coverage report to Code Climate
+          command:
+              # nyc report requires that nyc has already been run,
+              # which creates the .nyc_output folder containing necessary data
+              ./cc-test-reporter after-build -t lcov
+          when: always
+      - store_artifacts: # upload test coverage as artifact
+            path: ./coverage/lcov.info
+            prefix: tests
 workflows:
   build-and-test:
     jobs:
