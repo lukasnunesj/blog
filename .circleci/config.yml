@@ -25,13 +25,11 @@ jobs:
       - run:
           name: Send coverage report to Code Climate
           command:
-              # nyc report requires that nyc has already been run,
-              # which creates the .nyc_output folder containing necessary data
-              ./cc-test-reporter after-build -t lcov
+              ./cc-test-reporter after-build --exit-code $?
           when: always
       - store_artifacts: # upload test coverage as artifact
-            path: ./coverage/lcov.info
-            prefix: tests
+          path: ./coverage/lcov.info
+          prefix: tests
 workflows:
   build-and-test:
     jobs:
